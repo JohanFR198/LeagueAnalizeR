@@ -1,11 +1,20 @@
 Package: LeagueAnalizeR
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Package to extract League of Legens data from RIOT Games API. 
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Author: Johan Fonseca Rivera
+Maintainer: The package maintainer <josuefonseca73@gmail.com>
+Description: This package is intended to be used as a data extraction package from League of Legends API. Also the functions within this package allows the user to start the analysis quickly, since all the functions contained here will return data.frames or simple lists, instead of nested lists, saving time to the analyzer.The data contained in each data frame will vary, you will be able to see al kind of data, space, temporal variables, characters and numeric ones. There is a limitation from RIOT API that does not allow a user to do more than 20 queries by minute or 100 every 2 minutes, so for some of the functions, you will see Sys.sleeps and the reason of those is to avoid a ban from the API.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Imports:
+  httr,
+  dplyr,
+  stringr,
+  plyr,
+  purrr,
+  rlist,
+  reshape2,
+  tibble
+RoxygenNote: 7.1.1
