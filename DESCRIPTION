@@ -8,6 +8,8 @@ Description: This package is intended to be used as a data extraction package fr
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Depends:
+  dplyr
 Imports:
   httr,
   dplyr,

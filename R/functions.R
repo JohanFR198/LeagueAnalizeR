@@ -18,6 +18,14 @@
 #' @example
 #' ## Not run
 #' lol_get_summoners_data(region="la1", queue="RANKED_SOLO_5x5", division="DIAMOND", rank="I" , API)
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_summoners_data <- function(region="la1", queue="RANKED_SOLO_5x5", division="DIAMOND", rank="I" , API){
   https <- paste("https://",
@@ -26,10 +34,10 @@ lol_get_summoners_data <- function(region="la1", queue="RANKED_SOLO_5x5", divisi
                  queue, "/", division, "/", rank, "?page=1&api_key=",
                  API, sep = ""
   )
-  data <- GET(https)
+  data <- httr::GET(https)
   data <- httr::content(data)
 
-  data <- map(data, .f = function(x){data.frame(x[c(1:13)])})
+  data <- purrr::map(data, .f = function(x){data.frame(x[c(1:13)])})
   data <- do.call(rbind, data)
   return(data)
 }
@@ -50,11 +58,19 @@ lol_get_summoners_data <- function(region="la1", queue="RANKED_SOLO_5x5", divisi
 #' @example
 #' ## Not run
 #' lol_get_summoner_data(region="la1", "JohanLAG", API)
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_summoner_data <- function(region="la1", summoner_name, API){
-  summoner_name <- str_replace_all(summoner_name, " ","%20")
+  summoner_name <- stringr::str_replace_all(summoner_name, " ","%20")
   https= paste("https://",region,".api.riotgames.com/lol/summoner/v4/summoners/by-name/",summoner_name,"?api_key=",API, sep="")
-  data <- as.data.frame(httr::content(GET(https)))
+  data <- as.data.frame(httr::content(httr::GET(https)))
   return(data)
 }
 
@@ -73,6 +89,14 @@ lol_get_summoner_data <- function(region="la1", summoner_name, API){
 #' @example
 #' ## Not run
 #' lol_get_summoner_data(region="la1", summoner_id, API)
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_masteries <- function(region="la1", summoner_id, API){
   https = paste("https://",
@@ -81,8 +105,8 @@ lol_get_masteries <- function(region="la1", summoner_id, API){
                 summoner_id,
                 "?api_key=",
                 API, sep="")
-  data <- httr::content(GET(https))
-  data <- map(data, .f = function(x){data.frame(x[c(1:9)])})
+  data <- httr::content(httr::GET(https))
+  data <- purrr::map(data, .f = function(x){data.frame(x[c(1:9)])})
   data <- do.call(rbind, data)
   return(data)
 }
@@ -102,13 +126,21 @@ lol_get_masteries <- function(region="la1", summoner_id, API){
 #' @example
 #' ## Not run
 #' lol_get_matches(region="la1", acc_id, API)
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_matches <- function(region="la1", acc_id=acc_id, API){
   https = paste(
     "https://",region,".api.riotgames.com/lol/match/v4/matchlists/by-account/",acc_id,"?api_key=",API, sep="")
-  data <- httr::content(httr::GET(https))[[1]]
+  data <- httr::content(httr::GET(httr::https))[[1]]
 
-  data <- map(data, .f = function(x){data.frame(x[c(1:8)])})
+  data <- purrr::map(data, .f = function(x){data.frame(x[c(1:8)])})
   data <- do.call(rbind, data)
   return(data)
 }
@@ -129,6 +161,14 @@ lol_get_matches <- function(region="la1", acc_id=acc_id, API){
 #' @example
 #' ## Not run
 #' lol_get_match_info(region="la1", match_id, API, timeline_data)
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_match_info <- function(region = "la1", match_id, API, timeline_data=T){
   https <- paste("https://",region,".api.riotgames.com/lol/match/v4/matches/",match_id,"?api_key=",API, sep="")
@@ -136,7 +176,7 @@ lol_get_match_info <- function(region = "la1", match_id, API, timeline_data=T){
   game_info <- unlist(data[c(1:10)])
 
   #Team agg inf
-  team_info <- do.call(rbind, map(data$teams, .f = function(x){data.frame(x[c(1:15)])}))
+  team_info <- do.call(rbind, purrr::map(data$teams, .f = function(x){data.frame(x[c(1:15)])}))
   bans <- data$teams$bans
 
   ##Participant details
@@ -158,20 +198,20 @@ lol_get_match_info <- function(region = "la1", match_id, API, timeline_data=T){
 
 
   participant_id <- data$participantIdentities
-  participant_id <- imap_dfr(participant_id,
+  participant_id <- purrr::imap_dfr(participant_id,
                              .f = function(x, .y){data.frame(x$player, player_id = .y)} )
   #Joining data
   data <- participant_info %>%
-    left_join(participant_stats, by =c("participantId" = "participantId")) %>%
-    left_join(participant_id, by =c("participantId" = "player_id")) %>%
-    left_join(participant_timeline %>%
-                distinct(participantId, role, lane) %>%
-                mutate(participantId = as.integer(participantId)),
+    dplyr::left_join(participant_stats, by =c("participantId" = "participantId")) %>%
+    dplyr::left_join(participant_id, by =c("participantId" = "player_id")) %>%
+    dplyr::left_join(participant_timeline %>%
+                dplyr::distinct(participantId, role, lane) %>%
+                dplyr::mutate(participantId = as.integer(participantId)),
               by=c("participantId" = "participantId"))
 
 
   data_timeline <- data %>%
-    left_join(participant_timeline, by = c("participantId" = "participantId"))
+    dplyr::left_join(participant_timeline, by = c("participantId" = "participantId"))
 
 
   ifelse(timeline_data==T,
@@ -197,21 +237,29 @@ lol_get_match_info <- function(region = "la1", match_id, API, timeline_data=T){
 #' @example
 #' ## Not run
 #' lol_get_match_time(region="la1", match_id, API, timeline_data)
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_match_time <- function(region = "la1", match_id, API){
   https = paste("https://", region, ".api.riotgames.com/lol/match/v4/timelines/by-match/", match_id, "?api_key=", API,
                 sep = "")
   data <- httr::content(httr::GET(https))
   data_frames <- data$frames[c(1:(length(data$frames)-1))]
-  data_participant <- map_depth(lapply(data_frames,'[[',1),.depth=2,
+  data_participant <- purrr::map_depth(lapply(data_frames,'[[',1),.depth=2,
                                 .f = function(x){data.frame(x)}) %>%
-    map(list.rbind) %>%
-    imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = .y)})
+    purrr::map(plyr::list.rbind) %>%
+    purrr::imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = .y)})
   last_time_frame <- data$frames[c(length(data$frames))]
   last_time_frame <- map_depth(lapply(last_time_frame,'[[',1),.depth=2,
                                .f = function(x){data.frame(x)}) %>%
-    map(list.rbind) %>%
-    imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = length(data$frames))})
+    purrr::map(list.rbind) %>%
+    purrr::imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = length(data$frames))})
 
   data_participants <- data_participant %>%
     plyr::rbind.fill(last_time_frame)
@@ -221,9 +269,9 @@ lol_get_match_time <- function(region = "la1", match_id, API){
   if(length(events[[1]])==0){events <- events[c(2:length(events))]}
 
   events_df <- do.call(plyr::rbind.fill,
-                       imap(
-                         map(
-                           map_depth(events,
+                       purrr::imap(
+                         purrr::map(
+                           purrr::map_depth(events,
                                      .depth=2,
                                      .f = function(x){data.frame(t(unlist(x)))}),
                            plyr::rbind.fill),
@@ -235,10 +283,10 @@ lol_get_match_time <- function(region = "la1", match_id, API){
             position.x = NA_real_, position.y = NA_real_, killerId = NA_real_, victimId = NA_real_, afterId = NA_real_, beforeId = NA_real_, monsterType = NA_real_, monsterSubType = NA_real_,
             teamId = NA_real_, buildingType = NA_real_, laneType = NA_real_, towerType = NA_real_)
 
-  events_df <- events_df %>% add_column(!!!cols[setdiff(names(cols), names(events_df))]) %>%
-    mutate(assistingParticipant_Ids = paste(assistingParticipantIds, assistingParticipantIds1, assistingParticipantIds2, assistingParticipantIds3, sep=", ")
+  events_df <- events_df %>% tibble::add_column(!!!cols[setdiff(names(cols), names(events_df))]) %>%
+    dplyr::mutate(assistingParticipant_Ids = paste(assistingParticipantIds, assistingParticipantIds1, assistingParticipantIds2, assistingParticipantIds3, sep=", ")
     ) %>%
-    select(type, timestamp, time_frame ,
+    dplyr::select(type, timestamp, time_frame ,
            participantId,assistingParticipantIds ,itemId, skillSlot, levelUpType, wardType, creatorId,
            position.x, position.y, killerId, victimId, afterId, beforeId, monsterType, monsterSubType,
            teamId, buildingType, laneType, towerType)
@@ -259,26 +307,34 @@ lol_get_match_time <- function(region = "la1", match_id, API){
 #' @example
 #' ## Not run
 #' lol_get_data_champs(version="11.1.1", language = "en_US")
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_data_champs <- function(version="11.1.1", language = "en_US"){
-  data_champs <- content(
-    GET(
+  data_champs <- httr::content(
+    httr::GET(
       paste(
         "http://ddragon.leagueoflegends.com/cdn/", version, "/data/", language, "/champion.json", sep=""
       )
     )
   )
   data_champs <- data_champs$data %>%
-    map_dfr(data.frame) %>%
-    mutate(tags = paste(tags..Mage., tags..Assassin., tags..Support., tags..Marksman., tags..Fighter., tags..Tank.,
+    purrr::map_dfr(data.frame) %>%
+    dplyr::mutate(tags = paste(tags..Mage., tags..Assassin., tags..Support., tags..Marksman., tags..Fighter., tags..Tank.,
                         X.Assassin., X.Mage., X.Marksman., X.Fighter., X.Support., X.Tank., sep=",")) %>%
-    select(id, key, name, title, blurb, info.attack, info.defense, info.magic, info.difficulty, partype,
+    dplyr::select(id, key, name, title, blurb, info.attack, info.defense, info.magic, info.difficulty, partype,
            stats.hp, stats.hpperlevel, stats.mp, stats.mpperlevel, stats.movespeed, stats.armor, stats.armorperlevel,
            stats.spellblock, stats.spellblockperlevel, stats.attackrange, stats.hpregen, stats.hpregenperlevel, stats.mpregen,
            stats.mpregenperlevel, stats.crit, stats.critperlevel, stats.attackdamage, stats.attackdamageperlevel,
            stats.attackspeedperlevel, stats.attackspeed, tags) %>%
-    mutate(tags = str_replace_all(str_remove_all(tags, "NA")," ", ""))
-  colnames(data_champs) <- str_remove_all(str_remove_all(colnames(data_champs), "stat.."),"info.")
+    dplyr::mutate(tags = stringr::str_replace_all(stringr::str_remove_all(tags, "NA")," ", ""))
+  colnames(data_champs) <- stringr::str_remove_all(stringr::str_remove_all(colnames(data_champs), "stat.."),"info.")
   return(data_champs)
 }
 
@@ -294,16 +350,161 @@ lol_get_data_champs <- function(version="11.1.1", language = "en_US"){
 #' @example
 #' ## Not run
 #' lol_get_data_champ(version="11.1.1", language = "en_US", champion_name ="Nasus")
+#' @import   httr
+#' @import dplyr
+#' @import stringr
+#' @import plyr
+#' @import purrr
+#' @importr list
+#' @import reshape2
+#' @import tibbl
 
 lol_get_data_champ <- function(version="11.1.1", language = "en_US", champion_name){
-  data_champs <- content(
-    GET(
+  data_champs <- httr::content(
+    httr::GET(
       paste(
         "http://ddragon.leagueoflegends.com/cdn/", version, "/data/", language, "/champion/",  champion_name,".json", sep=""
       )
     )
   )
-  data_spells <- data_champs$data[[1]]$spells %>% map_dfr(.f=function(x){data.frame(x[c(1:4, 6, 8, 10)])})
+  data_spells <- data_champs$data[[1]]$spells %>% purrr::map_dfr(.f=function(x){data.frame(x[c(1:4, 6, 8, 10)])})
   return(data_spells)
 }
 
+
+
+
+
+
+# Crawler
+
+#First: Take a list of players
+crawler_regions <- function(key, regions, rank, division){
+  print("This could take a while... Want to play LoL?")
+  # Set df to null to bind them later
+  matches_info <- NULL
+  match_info_df <- NULL
+  match_events_df <- NULL
+  player_data_df <- NULL
+
+  # For loop goes through all specified regions
+  for(j in 1:length(regions)){
+    cat("Getting data from region:", regions[j], "\n")
+
+    #Get list of accounts from region j, tier & division
+    summoners <- lol_get_summoners_data(region = regions[j], rank = rank, division =division, API=key)
+    accounts <- c()
+    cat("Get Summoners Account Process will take about:", round(nrow(summoners)/60,2), "minutes \n" )
+
+    # From that list, take all the possible acc_ids
+    for(i in 1:nrow(summoners)){
+      cat(i)
+      acc <- lol_get_summoner_data(region = regions[j],
+                                   summoner_name = summoners$summonerName[i],
+                                   API=key)$accountId
+      accounts[i] <- ifelse(is.null(acc), "1", acc)
+      # Rate limit prevention
+      Sys.sleep(1)
+    }
+    cat("Cooldown 60s")
+    Sys.sleep(60)
+    accounts <- unique(accounts[accounts!="1"])
+
+    # Take last match for each summoner on list
+    cat("\n Taking last match for each summoner \n")
+    cat("This process will take around:", round(length(accounts)/60, 2), "minutes \n")
+    match <- c()
+    for(i in 1:length(accounts)){
+      if(i==99 || i==199){Sys.sleep(30)}
+      cat(i)
+      match_id <- as.character(lol_get_matches(region = regions[j], acc_id = accounts[i], API = key)$gameId[1])
+      #For some players it does not find match, so thi sets match_id as 1 and we remove it later
+      match[i] <- ifelse(is.null(match_id), "1", match_id)
+      #Rate limit prevention
+      Sys.sleep(1)
+    }
+    print("First part done!")
+    Sys.sleep(30)
+
+    # remove duplicated and non-valid match ids
+    match <- unique(match[match!=1])
+    cat("Get Match information (without timeline, next step takes that data) \n")
+    cat("Getting Match information for:", length(match), "matches \n")
+    cat("This process will take:", round((length(match)*1.5)/60, 2), "minutes \n")
+    match_info <- vector(mode="list",length = length(match))
+
+    for(i in 1:length(match)){
+      cat(i)
+      if(i==99){Sys.sleep(30)}
+      match_info[[i]] <- lol_get_match_info(region=regions[j],
+                                            match_id = match[i],
+                                            API=key,
+                                            timeline_data = F)
+      match_info[[i]]$match_id <- match[i]
+      Sys.sleep(1)
+    }
+    cat("Second part done!  \n")
+    cat("Cooldown 60s  \n")
+    Sys.sleep(60)
+    to_remove <-  which(match_info %>% map_chr(class) != "data.frame")
+    match_info <- match_info[-to_remove]
+    summoners_p <- do.call(plyr::rbind.fill,match_info)$summonerName
+    matches_info <- plyr::rbind.fill(matches_info, do.call(plyr::rbind.fill,match_info) %>% mutate(REG = regions[j]))
+
+    #Get timeline info
+    cat("Getting Match Timeline information for:", length(match), "matches \n")
+    match_info <- vector(mode="list",length = length(match))
+    match_events <- vector(mode="list",length = length(match))
+    cat("This process will take:", round((length(match)*2.3)/60, 2), "minutes  \n")
+
+    for(i in 1:length(match)){
+      cat(i)
+      if(i==99){Sys.sleep(30)}
+      data <- try(lol_get_match_time(region=regions[j],
+                                     match_id = match[i],
+                                     API=key))
+      if(data !=  "Error in events[[1]] : subscript out of bounds\n" & data != "Error : All inputs to rbind.fill must be data.frames\n"){
+        match_info[[i]] <- data$data_participants
+        match_events[[i]] <- data$data_events
+        match_events[[i]]$match_id = match[i]
+        match_events[[i]]$match_id = match[i]}
+      Sys.sleep(1)
+    }
+    ("Third part done!")
+    Sys.sleep(60)
+    match_events_df <- rbind(match_events_df,do.call(rbind,match_events) %>% mutate(REG = regions[j]))
+    match_info_df <- rbind(match_info_df, do.call(rbind,match_info)%>% mutate(REG = regions[j]))
+
+    #Now we need the data of all the players that were on those matches
+    Names <- unique(matches_info %>% filter(REG == regions[j]) %>% select(summonerName))$summonerName
+
+    player_data <- vector(mode="list",length = length(Names))
+
+    cat("Getting summoner information for:", length(Names), "summoners \n")
+    for(i in 1:length(Names)){
+      cat(i, " ")
+      if(i %% 100 ==0){Sys.sleep(30)}
+      acc <- lol_get_summoner_data(region = regions[j],
+                                   summoner_name = Names[i],
+                                   API=key)
+      player_data[[i]] <- acc
+      # Rate limit prevention
+      Sys.sleep(1)
+    }
+
+    player_data_df <- rbind(player_data_df, do.call(plyr::rbind.fill,player_data) %>% mutate(REG = regions[j]))
+    print("Fourth part done!")
+    print("We finish the first region, please give a minute to let the server rest")
+    #Rate limit prevention
+    Sys.sleep(60)
+  }
+  divisions <- data.frame(accountId = player_data_df$accountId, Division = division)
+  out <- list(  matches_info,
+                match_info_df,
+                match_events_df,
+                player_data_df %>% left_join(divisions, by = c("accountId" = "accountId"))
+  )
+  return(out)
+}
+
+x <- lol_get_data_champs()
