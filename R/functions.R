@@ -69,7 +69,7 @@ lol_get_summoners_data <- function(region="la1", queue="RANKED_SOLO_5x5", divisi
 
 lol_get_summoner_data <- function(region="la1", summoner_name, API){
   summoner_name <- stringr::str_replace_all(summoner_name, " ","%20")
-  https= paste("https://",region,".api.riotgames.com/lol/summoner/v4/summoners/by-name/",summoner_name,"?api_key=",API, sep="")
+  https <-  paste("https://",region,".api.riotgames.com/lol/summoner/v4/summoners/by-name/",summoner_name,"?api_key=",API, sep="")
   data <- as.data.frame(httr::content(httr::GET(https)))
   return(data)
 }
@@ -138,7 +138,7 @@ lol_get_masteries <- function(region="la1", summoner_id, API){
 lol_get_matches <- function(region="la1", acc_id=acc_id, API){
   https = paste(
     "https://",region,".api.riotgames.com/lol/match/v4/matchlists/by-account/",acc_id,"?api_key=",API, sep="")
-  data <- httr::content(httr::GET(httr::https))[[1]]
+  data <- httr::content(httr::GET(https))[[1]]
 
   data <- purrr::map(data, .f = function(x){data.frame(x[c(1:8)])})
   data <- do.call(rbind, data)
@@ -506,5 +506,3 @@ crawler_regions <- function(key, regions, rank, division){
   )
   return(out)
 }
-
-x <- lol_get_data_champs()
