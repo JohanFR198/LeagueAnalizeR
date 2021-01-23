@@ -181,10 +181,10 @@ lol_get_match_info <- function(region = "la1", match_id, API, timeline_data=T){
 
   ##Participant details
   participant <- data$participants
-  participant_info <- map_dfr(participant, .f = function(x){data.frame(x[c(1:5)])})
-  participant_stats <- map_dfr(participant, .f = function(x){data.frame(x$stats)})
-  participant_timeline <- map_dfr(
-    map_depth(participant,
+  participant_info <- purrr::map_dfr(participant, .f = function(x){data.frame(x[c(1:5)])})
+  participant_stats <- purrr::map_dfr(participant, .f = function(x){data.frame(x$stats)})
+  participant_timeline <- purrr::map_dfr(
+    purrr::map_depth(participant,
               .depth = 1 ,
               .f = function(x) {
                 t(list.rbind(x$timeline))
