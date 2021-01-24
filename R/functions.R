@@ -256,7 +256,7 @@ lol_get_match_time <- function(region = "la1", match_id, API){
     purrr::map(rlist::list.rbind) %>%
     purrr::imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = .y)})
   last_time_frame <- data$frames[c(length(data$frames))]
-  last_time_frame <- map_depth(lapply(last_time_frame,'[[',1),.depth=2,
+  last_time_frame <- purrr::map_depth(lapply(last_time_frame,'[[',1),.depth=2,
                                .f = function(x){data.frame(x)}) %>%
     purrr::map(rlist::list.rbind) %>%
     purrr::imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = length(data$frames))})
@@ -446,7 +446,7 @@ crawler_regions <- function(key, regions, rank, division){
     cat("Second part done!  \n")
     cat("Cooldown 60s  \n")
     Sys.sleep(60)
-    to_remove <-  which(match_info %>% map_chr(class) != "data.frame")
+    to_remove <-  which(match_info %>% purrr::map_chr(class) != "data.frame")
     match_info <- match_info[-to_remove]
     summoners_p <- do.call(plyr::rbind.fill,match_info)$summonerName
     matches_info <- plyr::rbind.fill(matches_info, do.call(plyr::rbind.fill,match_info) %>% mutate(REG = regions[j]))
