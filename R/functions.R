@@ -187,7 +187,7 @@ lol_get_match_info <- function(region = "la1", match_id, API, timeline_data=T){
     purrr::map_depth(participant,
               .depth = 1 ,
               .f = function(x) {
-                t(list.rbind(x$timeline))
+                t(rlist::list.rbind(x$timeline))
               }),
     .f = function(x){data.frame(x)})
 
@@ -253,12 +253,12 @@ lol_get_match_time <- function(region = "la1", match_id, API){
   data_frames <- data$frames[c(1:(length(data$frames)-1))]
   data_participant <- purrr::map_depth(lapply(data_frames,'[[',1),.depth=2,
                                 .f = function(x){data.frame(x)}) %>%
-    purrr::map(plyr::list.rbind) %>%
+    purrr::map(rlist::list.rbind) %>%
     purrr::imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = .y)})
   last_time_frame <- data$frames[c(length(data$frames))]
   last_time_frame <- map_depth(lapply(last_time_frame,'[[',1),.depth=2,
                                .f = function(x){data.frame(x)}) %>%
-    purrr::map(list.rbind) %>%
+    purrr::map(rlist::list.rbind) %>%
     purrr::imap_dfr(.f = function(x, .y){data.frame(x, Time_frame = length(data$frames))})
 
   data_participants <- data_participant %>%

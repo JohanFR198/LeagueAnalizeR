@@ -18,5 +18,6 @@ Imports:
   purrr,
   rlist,
   reshape2,
-  tibble
+  tibble,
+  rlist
 RoxygenNote: 7.1.1
