@@ -464,7 +464,7 @@ crawler_regions <- function(key, regions, rank, division){
                                      match_id = match[i],
                                      API=key))
       if(data !=  "Error in events[[1]] : subscript out of bounds\n" & data != "Error : All inputs to rbind.fill must be data.frames\n"){
-        match_info[[i]] <- data$data_participants
+        match_info[[i]] <- data$data_participants %>% mutate(MATCH_ID = match[i])
         match_events[[i]] <- data$data_events
         match_events[[i]]$match_id = match[i]
         match_events[[i]]$match_id = match[i]}
