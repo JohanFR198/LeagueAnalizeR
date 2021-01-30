@@ -72,7 +72,6 @@ lol_get_summoner_data <- function(region="la1", summoner_name="JohanLAG", API=KE
   return(data)
 }
 
-lol_get_summoner_data()
 #' Get the champion masteries of a summoner
 #'
 #' This function allows you to get the data all the champion masteries that a summoner owns based on its account ID (this can be get with lol_get_summoner_data() ).
@@ -140,10 +139,10 @@ lol_get_matches <- function(region="la1", acc_id="jkBkWnhZTYCyNR4ivxgSdtOttGqRp0
     GET() %>%
     content(as="text") %>%
     jsonlite::fromJSON()
-  return(https[[1]])
-}
+  https[[1]] %>% mutate(totalGames=https[[4]])
 
-a <- lol_get_matches()
+  return(https)
+}
 
 #' Get the match information
 #'
@@ -522,57 +521,57 @@ summoner_crawler <- function(summoner_name,  region, key){
                                                                      summoner_name = "Unai Ondulado",
                                                                      API = dev)$id,
                                  API=dev), by=c("key"="championId")) %>%
-    select(key, name, role, lane, championPoints, championLevel, gameid)
+    select(key, name, role, lane, championPoints, championLevel, gameId)
 
 
 }
 
-#
-# ggplotly(ggplot(data=champs %>%
-#                   group_by(name) %>%
-#                   summarise(n=n(),
-#                             championPoints=mean(championPoints),
-#                             championLevel=mean(championLevel)) %>%
-#                   filter(n!=1),
-#                 aes(x=reorder(name, -n, "desc"),
-#                     y=n,
-#                     text=paste("Champion:", name, "\n",
-#                                "Times Played:", n, "\n",
-#                                "Level:", championLevel, "\n",
-#                                "Points:", championPoints)))+
-#            geom_col(fill="#010A13")+#26919D
-#            geom_point(aes(y=10*(championPoints-min(championPoints))/(max(championPoints)-min(championPoints))),
-#                       col = "#956D2F")+
-#            geom_point(aes(y=10*(championLevel-min(championLevel))/(max(championLevel)-min(championLevel))),
-#                       col = "#D2A73E")+
-#            theme_classic()+
-#            coord_flip()+
-#            xlab("Champion")+
-#            ylab("Frequency")+
-#            theme(
-#              plot.background = element_rect(fill = "white"),
-#              panel.background = element_rect(fill = "white"),
-#              axis.line.x = element_line(color = "White")
-#            ),
-#          tooltip = "text")
-#
-#
-# ggplotly(ggplot(data=champs %>%
-#                   group_by(lane) %>%
-#                   summarise(n=n()),
-#                 aes(x=reorder(lane, -n, "desc"),
-#                     y=n,
-#                     text=paste("Lane:", lane, "\n",
-#                                "Times Played:", n, "\n")))+
-#            geom_col(fill="#010A13")+#26919D
-#            theme_classic()+
-#            coord_flip()+
-#            xlab("Lane")+
-#            ylab("Frequency")+
-#            theme(
-#              plot.background = element_rect(fill = "white"),
-#              panel.background = element_rect(fill = "white"),
-#              axis.line.x = element_line(color = "White")
-#            ),
-#          tooltip = "text")
-#
+
+ggplotly(ggplot(data=champs %>%
+                  group_by(name) %>%
+                  summarise(n=n(),
+                            championPoints=mean(championPoints),
+                            championLevel=mean(championLevel)) %>%
+                  filter(n!=1),
+                aes(x=reorder(name, -n, "desc"),
+                    y=n,
+                    text=paste("Champion:", name, "\n",
+                               "Times Played:", n, "\n",
+                               "Level:", championLevel, "\n",
+                               "Points:", championPoints)))+
+           geom_col(fill="#010A13")+#26919D
+           geom_point(aes(y=10*(championPoints-min(championPoints))/(max(championPoints)-min(championPoints))),
+                      col = "#956D2F")+
+           geom_point(aes(y=10*(championLevel-min(championLevel))/(max(championLevel)-min(championLevel))),
+                      col = "#D2A73E")+
+           theme_classic()+
+           coord_flip()+
+           xlab("Champion")+
+           ylab("Frequency")+
+           theme(
+             plot.background = element_rect(fill = "white"),
+             panel.background = element_rect(fill = "white"),
+             axis.line.x = element_line(color = "White")
+           ),
+         tooltip = "text")
+
+
+ggplotly(ggplot(data=champs %>%
+                  group_by(lane) %>%
+                  summarise(n=n()),
+                aes(x=reorder(lane, -n, "desc"),
+                    y=n,
+                    text=paste("Lane:", lane, "\n",
+                               "Times Played:", n, "\n")))+
+           geom_col(fill="#010A13")+#26919D
+           theme_classic()+
+           coord_flip()+
+           xlab("Lane")+
+           ylab("Frequency")+
+           theme(
+             plot.background = element_rect(fill = "white"),
+             panel.background = element_rect(fill = "white"),
+             axis.line.x = element_line(color = "White")
+           ),
+         tooltip = "text")
+
