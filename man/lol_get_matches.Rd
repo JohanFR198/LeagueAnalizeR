@@ -4,7 +4,11 @@
 \alias{lol_get_matches}
 \title{Get a list of matches of a summoner}
 \usage{
-lol_get_matches(region = "la1", acc_id = acc_id, API)
+lol_get_matches(
+  region = "la1",
+  acc_id = "jkBkWnhZTYCyNR4ivxgSdtOttGqRp0Q9igtrmRwSBBfvK2M",
+  API = KEY
+)
 }
 \arguments{
 \item{region}{The region where is the summoner you want to query, it should be a character vector with length 1. Valid entries are:

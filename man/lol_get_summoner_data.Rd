@@ -4,7 +4,7 @@
 \alias{lol_get_summoner_data}
 \title{Get data from a specific summoner}
 \usage{
-lol_get_summoner_data(region = "la1", summoner_name, API)
+lol_get_summoner_data(region = "la1", summoner_name = "JohanLAG", API = KEY)
 }
 \arguments{
 \item{region}{The region where is the summoner you want to query, it should be a character vector with length 1. Valid entries are:

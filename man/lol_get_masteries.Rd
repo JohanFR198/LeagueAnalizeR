@@ -4,7 +4,11 @@
 \alias{lol_get_masteries}
 \title{Get the champion masteries of a summoner}
 \usage{
-lol_get_masteries(region = "la1", summoner_id, API)
+lol_get_masteries(
+  region = "la1",
+  summoner_id = "6Om8SoTmGhqgZJ6MDFeBhRxiROgwB4ZZZVwQiqc6XVUcZw",
+  API = KEY
+)
 }
 \arguments{
 \item{region}{The region where is the summoner you want to query, it should be a character vector with length 1. Valid entries are:

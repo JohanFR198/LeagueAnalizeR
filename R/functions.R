@@ -26,22 +26,20 @@
 #' @importr list
 #' @import reshape2
 #' @import tibbl
+KEY = "RGAPI-4613382f-4333-4303-90c2-8333263f9872"
 
 lol_get_summoners_data <- function(region="la1", queue="RANKED_SOLO_5x5", division="DIAMOND", rank="I" , API){
-  https <- paste("https://",
+  data <- paste("https://",
                  region,
                  ".api.riotgames.com/lol/league-exp/v4/entries/",
                  queue, "/", division, "/", rank, "?page=1&api_key=",
                  API, sep = ""
-  )
-  data <- httr::GET(https)
-  data <- httr::content(data)
-
-  data <- purrr::map(data, .f = function(x){data.frame(x[c(1:13)])})
-  data <- do.call(rbind, data)
+  ) %>%
+    GET() %>%
+    content(as="text") %>%
+    jsonlite::fromJSON()
   return(data)
 }
-
 
 #' Get data from a specific summoner
 #'
@@ -67,13 +65,14 @@ lol_get_summoners_data <- function(region="la1", queue="RANKED_SOLO_5x5", divisi
 #' @import reshape2
 #' @import tibbl
 
-lol_get_summoner_data <- function(region="la1", summoner_name, API){
+lol_get_summoner_data <- function(region="la1", summoner_name="JohanLAG", API=KEY){
   summoner_name <- stringr::str_replace_all(summoner_name, " ","%20")
   https <-  paste("https://",region,".api.riotgames.com/lol/summoner/v4/summoners/by-name/",summoner_name,"?api_key=",API, sep="")
   data <- as.data.frame(httr::content(httr::GET(https)))
   return(data)
 }
 
+lol_get_summoner_data()
 #' Get the champion masteries of a summoner
 #'
 #' This function allows you to get the data all the champion masteries that a summoner owns based on its account ID (this can be get with lol_get_summoner_data() ).
@@ -98,17 +97,17 @@ lol_get_summoner_data <- function(region="la1", summoner_name, API){
 #' @import reshape2
 #' @import tibbl
 
-lol_get_masteries <- function(region="la1", summoner_id, API){
+lol_get_masteries <- function(region="la1", summoner_id="6Om8SoTmGhqgZJ6MDFeBhRxiROgwB4ZZZVwQiqc6XVUcZw", API=KEY){
   https = paste("https://",
                 region,
                 ".api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/",
                 summoner_id,
                 "?api_key=",
-                API, sep="")
-  data <- httr::content(httr::GET(https))
-  data <- purrr::map(data, .f = function(x){data.frame(x[c(1:9)])})
-  data <- do.call(rbind, data)
-  return(data)
+                API, sep="") %>%
+    GET() %>%
+    content(as="text") %>%
+    jsonlite::fromJSON()
+  return(https)
 }
 
 #' Get a list of matches of a summoner
@@ -135,15 +134,16 @@ lol_get_masteries <- function(region="la1", summoner_id, API){
 #' @import reshape2
 #' @import tibbl
 
-lol_get_matches <- function(region="la1", acc_id=acc_id, API){
+lol_get_matches <- function(region="la1", acc_id="jkBkWnhZTYCyNR4ivxgSdtOttGqRp0Q9igtrmRwSBBfvK2M", API=KEY){
   https = paste(
-    "https://",region,".api.riotgames.com/lol/match/v4/matchlists/by-account/",acc_id,"?api_key=",API, sep="")
-  data <- httr::content(httr::GET(https))[[1]]
-
-  data <- purrr::map(data, .f = function(x){data.frame(x[c(1:8)])})
-  data <- do.call(rbind, data)
-  return(data)
+    "https://",region,".api.riotgames.com/lol/match/v4/matchlists/by-account/",acc_id,"?api_key=",API, sep="") %>%
+    GET() %>%
+    content(as="text") %>%
+    jsonlite::fromJSON()
+  return(https[[1]])
 }
+
+a <- lol_get_matches()
 
 #' Get the match information
 #'
@@ -506,3 +506,73 @@ crawler_regions <- function(key, regions, rank, division){
   )
   return(out)
 }
+
+
+# Get data of matches of a specific summoner
+
+dev="RGAPI-4613382f-4333-4303-90c2-8333263f9872"
+summoner_crawler <- function(summoner_name,  region, key){
+  acc_id <- lol_get_summoner_data(region = "EUW1", summoner_name = "Unai Ondulado",API = dev)$accountId
+  matches <- lol_get_matches(region = "EUW1", acc_id = acc_id, API = dev)
+  champs <- lol_get_data_champs() %>%
+    mutate(key = as.integer(key)) %>%
+    inner_join(matches, by = c("key"="champion")) %>%
+    inner_join(lol_get_masteries(region="EUW1",
+                                 summoner_id = lol_get_summoner_data(region = "EUW1",
+                                                                     summoner_name = "Unai Ondulado",
+                                                                     API = dev)$id,
+                                 API=dev), by=c("key"="championId")) %>%
+    select(key, name, role, lane, championPoints, championLevel, gameid)
+
+
+}
+
+#
+# ggplotly(ggplot(data=champs %>%
+#                   group_by(name) %>%
+#                   summarise(n=n(),
+#                             championPoints=mean(championPoints),
+#                             championLevel=mean(championLevel)) %>%
+#                   filter(n!=1),
+#                 aes(x=reorder(name, -n, "desc"),
+#                     y=n,
+#                     text=paste("Champion:", name, "\n",
+#                                "Times Played:", n, "\n",
+#                                "Level:", championLevel, "\n",
+#                                "Points:", championPoints)))+
+#            geom_col(fill="#010A13")+#26919D
+#            geom_point(aes(y=10*(championPoints-min(championPoints))/(max(championPoints)-min(championPoints))),
+#                       col = "#956D2F")+
+#            geom_point(aes(y=10*(championLevel-min(championLevel))/(max(championLevel)-min(championLevel))),
+#                       col = "#D2A73E")+
+#            theme_classic()+
+#            coord_flip()+
+#            xlab("Champion")+
+#            ylab("Frequency")+
+#            theme(
+#              plot.background = element_rect(fill = "white"),
+#              panel.background = element_rect(fill = "white"),
+#              axis.line.x = element_line(color = "White")
+#            ),
+#          tooltip = "text")
+#
+#
+# ggplotly(ggplot(data=champs %>%
+#                   group_by(lane) %>%
+#                   summarise(n=n()),
+#                 aes(x=reorder(lane, -n, "desc"),
+#                     y=n,
+#                     text=paste("Lane:", lane, "\n",
+#                                "Times Played:", n, "\n")))+
+#            geom_col(fill="#010A13")+#26919D
+#            theme_classic()+
+#            coord_flip()+
+#            xlab("Lane")+
+#            ylab("Frequency")+
+#            theme(
+#              plot.background = element_rect(fill = "white"),
+#              panel.background = element_rect(fill = "white"),
+#              axis.line.x = element_line(color = "White")
+#            ),
+#          tooltip = "text")
+#
