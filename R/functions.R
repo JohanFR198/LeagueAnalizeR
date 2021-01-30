@@ -26,7 +26,6 @@
 #' @importr list
 #' @import reshape2
 #' @import tibbl
-KEY = "RGAPI-4613382f-4333-4303-90c2-8333263f9872"
 
 lol_get_summoners_data <- function(region="la1", queue="RANKED_SOLO_5x5", division="DIAMOND", rank="I" , API){
   data <- paste("https://",
@@ -509,7 +508,6 @@ crawler_regions <- function(key, regions, rank, division){
 
 # Get data of matches of a specific summoner
 
-dev="RGAPI-4613382f-4333-4303-90c2-8333263f9872"
 summoner_crawler <- function(summoner_name,  region, key){
   acc_id <- lol_get_summoner_data(region = "EUW1", summoner_name = "Unai Ondulado",API = dev)$accountId
   matches <- lol_get_matches(region = "EUW1", acc_id = acc_id, API = dev)
