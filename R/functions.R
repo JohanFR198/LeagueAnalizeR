@@ -514,9 +514,10 @@ summoner_crawler <- function(summoner_name="Unai Ondulado",  region = "EUW1", AP
 
   # get data of the last 100 matches
   matchesInfo <- NULL
+  nmatches <- nrow(matches)
 
   cat("Getting general info \n")
-  for(i in 1:nrow(matches)){
+  for(i in 1:nmatches){
     cat(i)
     match <- lol_get_match_info(
       region = region,
@@ -539,7 +540,7 @@ summoner_crawler <- function(summoner_name="Unai Ondulado",  region = "EUW1", AP
   cat("Getting Timeline of each match \n")
   dataPart <- NULL
   dataEvents <- NULL
-  for(i in 1:nrow(matches)){
+  for(i in 1:nmatches){
     cat(i)
     list <- lol_get_match_time(region = region,
                                match_id = matches$gameId[i],
@@ -565,7 +566,7 @@ summoner_crawler <- function(summoner_name="Unai Ondulado",  region = "EUW1", AP
 
 a <- summoner_crawler(region="EUW1",
                       summoner_name = "Unai Ondulado",
-                      API = "RGAPI-77182ab9-234d-47b0-bcb6-addc78a0b779")
+                      API)
 
 #
 #
