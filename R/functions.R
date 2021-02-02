@@ -507,7 +507,6 @@ crawler_regions <- function(key, regions, rank, division){
 
 
 # Get data of matches of a specific summoner
-
 summoner_crawler <- function(summoner_name="Unai Ondulado",  region = "EUW1", API){
   acc_id <- lol_get_summoner_data(region = region, summoner_name = summoner_name,API = API)$accountId
   matches <- lol_get_matches(region = region , acc_id = acc_id, API = API)
@@ -563,10 +562,6 @@ summoner_crawler <- function(summoner_name="Unai Ondulado",  region = "EUW1", AP
 
 
 }
-
-a <- summoner_crawler(region="EUW1",
-                      summoner_name = "Unai Ondulado",
-                      API)
 
 #
 #
