@@ -244,7 +244,7 @@ lol_get_match_info <- function(region = "la1", match_id, API, timeline_data=T){
 #' @import reshape2
 #' @import tibbl
 
-lol_get_match_time <- function(region = "la1", match_id, API){
+lol_get_match_time <- function(region = "la1", match_id ="5019682262", API = API){
   https = paste("https://", region, ".api.riotgames.com/lol/match/v4/timelines/by-match/", match_id, "?api_key=", API,
                 sep = "")
   data <- httr::content(httr::GET(https))
@@ -269,9 +269,9 @@ lol_get_match_time <- function(region = "la1", match_id, API){
   events_df <- do.call(plyr::rbind.fill,
                        purrr::imap(
                          purrr::map(
-                           purrr::map_depth(events,
-                                     .depth=2,
-                                     .f = function(x){data.frame(t(unlist(x)))}),
+                           purrr::map_depth(events[lapply(events, length)>0],
+                                            .depth=2,
+                                            .f = function(x){data.frame(t(unlist(x)))}),
                            plyr::rbind.fill),
                          .f=function(x, .y){cbind(x, time_frame = .y)})
   )
@@ -508,21 +508,66 @@ crawler_regions <- function(key, regions, rank, division){
 
 # Get data of matches of a specific summoner
 
-summoner_crawler <- function(summoner_name,  region, key){
-  acc_id <- lol_get_summoner_data(region = "EUW1", summoner_name = "Unai Ondulado",API = dev)$accountId
-  matches <- lol_get_matches(region = "EUW1", acc_id = acc_id, API = dev)
-  champs <- lol_get_data_champs() %>%
-    mutate(key = as.integer(key)) %>%
-    inner_join(matches, by = c("key"="champion")) %>%
-    inner_join(lol_get_masteries(region="EUW1",
-                                 summoner_id = lol_get_summoner_data(region = "EUW1",
-                                                                     summoner_name = "Unai Ondulado",
-                                                                     API = dev)$id,
-                                 API=dev), by=c("key"="championId")) %>%
-    select(key, name, role, lane, championPoints, championLevel, gameId)
+summoner_crawler <- function(summoner_name="Unai Ondulado",  region = "EUW1", API){
+  acc_id <- lol_get_summoner_data(region = region, summoner_name = summoner_name,API = API)$accountId
+  matches <- lol_get_matches(region = region , acc_id = acc_id, API = API)
+
+  # get data of the last 100 matches
+  matchesInfo <- NULL
+
+  cat("Getting general info \n")
+  for(i in 1:nrow(matches)){
+    cat(i)
+    match <- lol_get_match_info(
+      region = region,
+      match_id = matches$gameId[i],
+      API = API,
+      timeline_data = T
+    )
+
+    if(!is.null(match)){
+      matchesInfo <- plyr::rbind.fill(matchesInfo,
+                                      match %>%
+                                        dplyr::mutate(matchId = matches$gameId[i]))
+    }
+
+    Sys.sleep(0.5)
+  }
+  cat("Cooldown: 30s \n")
+  Sys.sleep(30)
+
+  cat("Getting Timeline of each match \n")
+  dataPart <- NULL
+  dataEvents <- NULL
+  for(i in 1:nrow(matches)){
+    cat(i)
+    list <- lol_get_match_time(region = region,
+                               match_id = matches$gameId[i],
+                               API = API)
+
+    dataPart <- plyr::rbind.fill(dataPart,
+                      list[[1]] %>%
+                        dplyr::mutate(matchId = matches$gameId[i]))
+    dataEvents <- plyr::rbind.fill(dataEvents,
+                        list[[2]] %>%
+                          dplyr::mutate(matchId = matches$gameId[i]))
+
+    Sys.sleep(0.5)
+  }
+
+  cat("Finished")
+
+  return(list(matchesInfo = matchesInfo, dataParticipants = dataPart, dataEvents=dataEvents))
+
 
 
 }
+
+a <- summoner_crawler(region="EUW1",
+                      summoner_name = "Unai Ondulado",
+                      API = "RGAPI-77182ab9-234d-47b0-bcb6-addc78a0b779")
+
+
 
 
 ggplotly(ggplot(data=champs %>%
