@@ -510,6 +510,7 @@ crawler_regions <- function(key, regions, rank, division){
 summoner_crawler <- function(summoner_name="Unai Ondulado",  region = "EUW1", API){
   acc_id <- lol_get_summoner_data(region = region, summoner_name = summoner_name,API = API)$accountId
   matches <- lol_get_matches(region = region , acc_id = acc_id, API = API)
+  matches <- matches[[1]] %>% mutate(totalGames = matches[[4]])
 
   # get data of the last 100 matches
   matchesInfo <- NULL
