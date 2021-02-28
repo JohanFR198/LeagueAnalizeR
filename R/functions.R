@@ -370,6 +370,43 @@ lol_get_data_champ <- function(version="11.1.1", language = "en_US", champion_na
 }
 
 
+lol_get_bans <- function(region = "la1", match_id, API){
+  https <- paste("https://",region,".api.riotgames.com/lol/match/v4/matches/",match_id,"?api_key=",API, sep="")
+  data <- httr::content(httr::GET(https))
+  game_info <- unlist(data[c(1:10)])
+
+  #Team agg inf
+  team_info <- do.call(rbind, purrr::map(data$teams, .f = function(x){data.frame(x[c(1:15)])}))
+
+  #Ban information
+  bans <- data$teams[[1]]$bans
+  bans[6:10] <- data$teams[[2]]$bans
+  bans_df <- as.data.frame(t(rlist::list.cbind(bans)))
+  bans_df$match_id = match_id
+  bans_df$team_id <- rep(c(1,2), each=5)
+  bans_df$participantId <- c(1:10)
+
+
+  #Join Champion selected information
+  participant <- data$participants
+  participant_info <- purrr::map_dfr(participant, .f = function(x){data.frame(x[c(1:5)])})
+  participant_id <- data$participantIdentities
+  participant_id <- purrr::imap_dfr(participant_id,
+                                    .f = function(x, .y){data.frame(x$player, player_id = .y)} )
+
+
+  bans <- bans_df %>%
+    rename(bannedChamp=championId) %>%
+    left_join(participant_info %>%
+                select(participantId, championId),
+              by=c("participantId" = "participantId")) %>%
+    left_join(participant_id %>%
+                select(accountId,summonerName,summonerId, currentPlatformId, player_id) %>%
+                rename(participantId = player_id),
+              by="participantId")
+  return(bans)
+  }
+
 
 
 
@@ -387,6 +424,7 @@ crawler_regions <- function(key, regions, rank, division){
 
   # For loop goes through all specified regions
   for(j in 1:length(regions)){
+    j=1
     cat("Getting data from region:", regions[j], "\n")
 
     #Get list of accounts from region j, tier & division
@@ -397,6 +435,7 @@ crawler_regions <- function(key, regions, rank, division){
     # From that list, take all the possible acc_ids
     for(i in 1:nrow(summoners)){
       cat(i)
+      i=1
       acc <- lol_get_summoner_data(region = regions[j],
                                    summoner_name = summoners$summonerName[i],
                                    API=key)$accountId
@@ -415,7 +454,7 @@ crawler_regions <- function(key, regions, rank, division){
     for(i in 1:length(accounts)){
       if(i==99 || i==199){Sys.sleep(30)}
       cat(i)
-      match_id <- as.character(lol_get_matches(region = regions[j], acc_id = accounts[i], API = key)$gameId[1])
+      match_id <- as.character(lol_get_matches(region = regions[j], acc_id = accounts[i], API = key)$matches$gameId[1])
       #For some players it does not find match, so thi sets match_id as 1 and we remove it later
       match[i] <- ifelse(is.null(match_id), "1", match_id)
       #Rate limit prevention
